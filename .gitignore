@@ -1,0 +1,29 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dados e saídas (não sobem pro GitHub — o professor pediu só código e dependências)
+datasets/
+data/
+outputs/
+logs/
+*.mp4
+*.avi
+*.csv
+
+# Modelos de treino intermediários (o .onnx final pode subir, é pequeno)
+*.pt
+*.pth
+*.h5
+checkpoints/
