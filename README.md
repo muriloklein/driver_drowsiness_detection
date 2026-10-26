@@ -14,7 +14,7 @@ Sistema que monitora o rosto do motorista pela câmera e emite alertas quando de
 
 ## Requisitos
 
-- Python **3.11** (recomendado; o MediaPipe não suporta todas as versões novas)
+- Python **3.13** (testado; todos do grupo devem usar a mesma versão)
 - Webcam
 - Opcional: GPU NVIDIA + OpenCV compilada com CUDA
 
@@ -24,8 +24,11 @@ Sistema que monitora o rosto do motorista pela câmera e emite alertas quando de
 git clone <url-do-repositorio>
 cd detector-fadiga
 
-# Criar e ativar o ambiente virtual
-python -m venv .venv
+# Criar e ativar o ambiente virtual com Python 3.13
+# Windows:
+py -3.13 -m venv .venv
+# Linux/macOS:
+python3.13 -m venv .venv
 # Windows:
 .venv\Scripts\activate
 # Linux/macOS:

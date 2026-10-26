@@ -1,11 +1,14 @@
+# Testado com Python 3.13
+#
 # Visão computacional
 # IMPORTANTE: use SÓ o opencv-contrib-python. Ter opencv-python e
 # opencv-contrib-python instalados juntos causa conflito (os dois ocupam o pacote "cv2").
-opencv-contrib-python>=4.9
-numpy>=1.26
+opencv-contrib-python>=5.0
+numpy>=2.0
 
-# Landmarks faciais (Face Mesh - 468 pontos)
-mediapipe>=0.10
+# Landmarks faciais (Face Landmarker - 478 pontos, API "Tasks")
+# Atenção: a partir da 1.0 o antigo mp.solutions.face_mesh NÃO existe mais.
+mediapipe>=1.1
 
 # Interface gráfica (Etapa 4)
 PySide6>=6.6
