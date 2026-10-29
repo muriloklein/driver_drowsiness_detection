@@ -22,6 +22,9 @@ logs/
 *.avi
 *.csv
 
+# Modelos baixados de terceiros (cada um baixa com tools/download_models.py)
+models/*.task
+
 # Modelos de treino intermediários (o .onnx final pode subir, é pequeno)
 *.pt
 *.pth
