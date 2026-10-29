@@ -38,6 +38,19 @@ pip install -r requirements.txt
 
 # Testar o ambiente e a webcam
 python tools/check_env.py
+
+# Baixar os modelos pré-treinados (uma vez)
+python tools/download_models.py
+```
+
+## Como rodar
+
+Sempre a partir da raiz do projeto, com o `.venv` ativado:
+
+```bash
+python -m src.demo_etapa1              # webcam
+python -m src.demo_etapa1 video.mp4    # arquivo de vídeo
+python -m src.demo_etapa1 foto.jpg     # imagem
 ```
 
 ## Estrutura
