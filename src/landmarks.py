@@ -38,7 +38,7 @@ class FaceLandmarkDetector:
 
         self.video_mode = video_mode
         options = vision.FaceLandmarkerOptions(
-            base_options=BaseOptions(model_asset_path=str(model_path)),
+            base_options=BaseOptions(model_asset_buffer=model_path.read_bytes()),
             running_mode=vision.RunningMode.VIDEO if video_mode else vision.RunningMode.IMAGE,
             num_faces=1,  # só o motorista
             min_face_detection_confidence=min_detection_conf,
