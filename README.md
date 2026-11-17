@@ -14,35 +14,35 @@ Sistema que monitora o rosto do motorista pela câmera e emite alertas quando de
 
 ## Requisitos
 
-- Python **3.13** (versão testada. Todos do grupo devem usar a mesma)
+- Python 3.11 ou superior (testado na 3.11 e na 3.13)
 - Webcam
 - Opcional: GPU NVIDIA + OpenCV compilada com CUDA
 
 ## Instalação
 
+Clone o repositório e entre na branch `develop`:
+
 ```bash
 git clone https://github.com/muriloklein/driver_drowsiness_detection.git
 cd driver_drowsiness_detection
 git checkout develop
-
-# Criar e ativar o ambiente virtual com Python 3.13
-# Windows:
-py -3.13 -m venv .venv
-# Linux/macOS:
-python3.13 -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-
-pip install -r requirements.txt
-
-# Testar o ambiente e a webcam
-python tools/check_env.py
-
-# Baixar os modelos pré-treinados (uma vez)
-python tools/download_models.py
 ```
+
+Rode o setup. Ele cria o `.venv`, instala as dependências, baixa o modelo e testa o ambiente:
+
+```bash
+python setup.py
+```
+
+Ative o ambiente virtual. Isso precisa ser feito a cada novo terminal:
+
+| Terminal | Comando |
+| --- | --- |
+| PowerShell ou CMD (Windows) | `.venv\Scriptsctivate` |
+| Git Bash (Windows) | `source .venv/Scripts/activate` |
+| Linux ou macOS | `source .venv/bin/activate` |
+
+Quando estiver ativo, o terminal mostra `(.venv)` no começo da linha.
 
 ## Como rodar
 
@@ -53,6 +53,10 @@ python -m src.demo_etapa1              # webcam
 python -m src.demo_etapa1 video.mp4    # arquivo de vídeo
 python -m src.demo_etapa1 foto.jpg     # imagem
 ```
+
+Teclas na demo: `q` sai, `p` liga ou desliga o pré-processamento, `m` mostra os 478 pontos e `e` liga ou desliga a suavização.
+
+Se a webcam não abrir, teste outro índice (`python -m src.demo_etapa1 1`) e confira em Configurações, Privacidade e segurança, Câmera se os aplicativos de desktop têm acesso.
 
 ## Estrutura
 
