@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
-                               QPushButton, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
+                               QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
 from src.demo_etapa1 import EAR_PREVIEW_THRESHOLD
 from src.gui.worker import VideoWorker
@@ -22,9 +22,13 @@ class MainWindow(QMainWindow):
 
         file_btn = QPushButton("Abrir arquivo")
         file_btn.clicked.connect(self.open_file)
+        self.pre_check = QCheckBox("Pré-processamento")
+        self.pre_check.setChecked(True)
+        self.pre_check.toggled.connect(self.toggle_preprocessing)
 
         buttons = QHBoxLayout()
         buttons.addWidget(file_btn)
+        buttons.addWidget(self.pre_check)
         buttons.addStretch()
 
         self.state = QLabel("Estado: -")
@@ -56,6 +60,7 @@ class MainWindow(QMainWindow):
     def start(self, source):
         self.stop_worker()
         self.worker = VideoWorker(source)
+        self.worker.use_preprocessing = self.pre_check.isChecked()
         self.worker.frame_ready.connect(self.show_frame)
         self.worker.metrics_ready.connect(self.show_metrics)
         self.worker.failed.connect(self.show_error)
@@ -70,6 +75,10 @@ class MainWindow(QMainWindow):
         path, _ = QFileDialog.getOpenFileName(self, "Abrir vídeo ou imagem", "", MEDIA_FILTER)
         if path:
             self.start(path)
+
+    def toggle_preprocessing(self, checked):
+        if self.worker is not None:
+            self.worker.use_preprocessing = checked
 
     def show_frame(self, image):
         pixmap = QPixmap.fromImage(image)
