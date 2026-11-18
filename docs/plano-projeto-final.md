@@ -47,8 +47,8 @@ src/
   capture.py         ✅ leitura de webcam / vídeo / imagem
   preprocessing.py   ✅ gama, CLAHE, Gaussiano (adaptativo por brilho)
   landmarks.py       ✅ MediaPipe Face Landmarker
-  metrics.py         ✅ EAR, MAR, EMA   ⬜ PERCLOS, pose da cabeça
-  calibration.py     ⬜ limiar de EAR por pessoa
+  metrics.py         ✅ EAR, MAR, EMA, PERCLOS, pose da cabeça
+  calibration.py     ✅ limiar de EAR por pessoa
   fatigue.py         ⬜ estados e regras de alerta
   alert.py           ⬜ alerta sonoro
   gui/               ⬜ janela PySide6
@@ -57,7 +57,10 @@ tests/               ⬜ testes de metrics e fatigue
 
 **Contrato entre módulos (definir no dia 1 para os três trabalharem em paralelo):**
 
-- `compute_metrics(pts)` devolve `dict` com `ear`, `mar` e, depois, `perclos` e `head_pitch`.
+- `compute_metrics(pts, image_size=(w, h))` devolve `dict` com `ear`, `ear_right`, `ear_left`, `mar`, `head_pitch`, `head_yaw` e `head_roll` (graus). Sem `image_size`, os três ângulos vêm `None`.
+- O PERCLOS é temporal e não cabe em um quadro só: `PerclosMeter(window=60).update(fechado, t)` devolve a fração de 0 a 1. Ele tem `.ready`, que fica `False` nos primeiros 10 s, e `.reset()`. Quem guarda o `PerclosMeter` é o `FatigueMonitor`.
+- `EarCalibrator().start(t)` e depois `update(metrics_ou_None, t)` a cada quadro. Quando `done` fica `True`, `result` traz `ear_threshold` e `pitch_baseline`; se falhar, `error` traz a mensagem. Antes de calibrar, use `DEFAULT_EAR_THRESHOLD` (0,20).
+- Relógio `t` em segundos: na webcam, `time.monotonic()`; em arquivo de vídeo, `indice_do_quadro / fps`, para o tempo não depender da velocidade do PC. A demo (`src/demo_etapa1.py`) mostra o uso de tudo isso.
 - `FatigueMonitor.update(metrics, dt)` devolve um `FatigueState`: `level` (`OK`, `ATENCAO`, `ALERTA`), `reasons` (lista de textos) e os valores atuais.
 - A GUI só lê o `FatigueState` e não calcula nada.
 
@@ -66,7 +69,7 @@ tests/               ⬜ testes de metrics e fatigue
 - **Olhos fechados:** EAR abaixo do limiar calibrado por mais de 2 s → `ALERTA`.
 - **PERCLOS:** % de quadros com olho fechado nos últimos 60 s acima de 20 % → `ATENCAO`.
 - **Bocejo:** MAR acima de 0,6 por mais de 1,5 s → conta 1 bocejo. 3 bocejos em 5 min → `ATENCAO`.
-- **Cabeça:** inclinação para baixo acima de 20° por mais de 2 s → `ALERTA`.
+- **Cabeça:** `head_pitch - pitch_baseline` (da calibração) acima de 20° por mais de 2 s → `ALERTA`. Pitch positivo = cabeça para baixo. Suavizar com `EMA`, porque o solvePnP às vezes salta alguns graus em um quadro.
 - **Rosto ausente** por mais de 3 s → `ATENCAO` ("rosto não detectado").
 
 Os números acima são chutes razoáveis da literatura e precisam ser testados com os próprios integrantes.
@@ -103,8 +106,8 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | --- | --- | --- | --- | --- | --- |
 | 1 | Etapa 1: captura, pré-processamento, landmarks, EAR/MAR, demo | Murilo | Nenhuma | Código atual | ✅ Concluída |
 | 2 | Setup do repositório | Guilherme | Nenhuma | Branch `develop`, professor convidado, README corrigido e contrato entre módulos documentado | ✅ Concluída |
-| 3 | PERCLOS e pose da cabeça | Murilo | 1 | `metrics.py` com `perclos` (janela deslizante) e `head_pitch` (via `cv2.solvePnP` com 6 pontos do rosto) | ⬜ |
-| 4 | Calibração por pessoa | Murilo | 1 | `calibration.py`: 3 s de olhos abertos → limiar = 70 % do EAR médio | ⬜ |
+| 3 | PERCLOS e pose da cabeça | Murilo | 1 | `metrics.py` com `perclos` (janela deslizante) e `head_pitch` (via `cv2.solvePnP` com 6 pontos do rosto) | ✅ Concluída |
+| 4 | Calibração por pessoa | Murilo | 1 | `calibration.py`: 3 s de olhos abertos → limiar = 70 % do EAR médio | ✅ Concluída |
 | 5 | Lógica de decisão | Giuliano | 2 (contrato) | `fatigue.py` com `FatigueMonitor` e as regras acima, usando relógio injetável para testar | ⬜ |
 | 6 | Testes unitários | Giuliano | 3, 5 | `tests/` cobrindo EAR/MAR/PERCLOS com pontos sintéticos e as regras de `fatigue.py` | ⬜ |
 | 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | 🟡 Em andamento: janela, thread, painel e botões funcionando, faltam os commits finais |
