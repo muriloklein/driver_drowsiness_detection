@@ -20,6 +20,9 @@ class MainWindow(QMainWindow):
         self.video.setMinimumSize(640, 480)
         self.video.setStyleSheet("background: #111; color: #aaa;")
 
+        self.webcam_btn = QPushButton("Ligar webcam")
+        self.webcam_btn.setCheckable(True)
+        self.webcam_btn.toggled.connect(self.toggle_webcam)
         file_btn = QPushButton("Abrir arquivo")
         file_btn.clicked.connect(self.open_file)
         self.pre_check = QCheckBox("Pré-processamento")
@@ -27,6 +30,7 @@ class MainWindow(QMainWindow):
         self.pre_check.toggled.connect(self.toggle_preprocessing)
 
         buttons = QHBoxLayout()
+        buttons.addWidget(self.webcam_btn)
         buttons.addWidget(file_btn)
         buttons.addWidget(self.pre_check)
         buttons.addStretch()
@@ -71,9 +75,33 @@ class MainWindow(QMainWindow):
             self.worker.stop()
             self.worker = None
 
+    def toggle_webcam(self, on):
+        self.webcam_btn.setText("Desligar webcam" if on else "Ligar webcam")
+        if on:
+            self.start(0)
+        else:
+            self.stop_worker()
+            self.clear_display()
+
+    def set_webcam_button(self, on):
+        self.webcam_btn.blockSignals(True)
+        self.webcam_btn.setChecked(on)
+        self.webcam_btn.setText("Desligar webcam" if on else "Ligar webcam")
+        self.webcam_btn.blockSignals(False)
+
+    def clear_display(self):
+        self.video.clear()
+        self.video.setText("Sem vídeo")
+        self.state.setText("Estado: -")
+        self.ear.setText("EAR: -")
+        self.mar.setText("MAR: -")
+        self.fps.setText("FPS: -")
+        self.light.setText("")
+
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Abrir vídeo ou imagem", "", MEDIA_FILTER)
         if path:
+            self.set_webcam_button(False)
             self.start(path)
 
     def toggle_preprocessing(self, checked):
@@ -81,10 +109,14 @@ class MainWindow(QMainWindow):
             self.worker.use_preprocessing = checked
 
     def show_frame(self, image):
+        if self.worker is None:
+            return
         pixmap = QPixmap.fromImage(image)
         self.video.setPixmap(pixmap.scaled(self.video.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def show_metrics(self, m):
+        if self.worker is None:
+            return
         self.fps.setText(f"FPS: {m['fps']:.0f}")
         self.light.setText("Baixa luz" if m["low_light"] else "")
         if not m["face"]:
@@ -97,6 +129,8 @@ class MainWindow(QMainWindow):
         self.state.setText("Estado: ATENÇÃO" if m["ear"] < EAR_PREVIEW_THRESHOLD else "Estado: OK")
 
     def show_error(self, message):
+        self.set_webcam_button(False)
+        self.clear_display()
         QMessageBox.warning(self, "Erro", message)
 
     def closeEvent(self, event):
