@@ -3,7 +3,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
                                QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
-from src.demo_etapa1 import EAR_PREVIEW_THRESHOLD
+from src.calibration import DEFAULT_EAR_THRESHOLD
 from src.gui.worker import VideoWorker
 
 MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.bmp)"
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
             return
         self.ear.setText(f"EAR: {m['ear']:.3f}")
         self.mar.setText(f"MAR: {m['mar']:.3f}")
-        self.state.setText("Estado: ATENÇÃO" if m["ear"] < EAR_PREVIEW_THRESHOLD else "Estado: OK")
+        self.state.setText("Estado: ATENÇÃO" if m["ear"] < DEFAULT_EAR_THRESHOLD else "Estado: OK")
 
     def show_error(self, message):
         self.set_webcam_button(False)
