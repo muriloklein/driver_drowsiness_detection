@@ -3,6 +3,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QFileDialog, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
                                QPushButton, QVBoxLayout, QWidget)
 
+from src.demo_etapa1 import EAR_PREVIEW_THRESHOLD
 from src.gui.worker import VideoWorker
 
 MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.bmp)"
@@ -26,9 +27,28 @@ class MainWindow(QMainWindow):
         buttons.addWidget(file_btn)
         buttons.addStretch()
 
+        self.state = QLabel("Estado: -")
+        self.state.setStyleSheet("font-size: 18px; font-weight: bold;")
+        self.ear = QLabel("EAR: -")
+        self.mar = QLabel("MAR: -")
+        self.fps = QLabel("FPS: -")
+        self.light = QLabel("")
+
+        panel = QVBoxLayout()
+        for label in (self.state, self.ear, self.mar, self.fps, self.light):
+            panel.addWidget(label)
+        panel.addStretch()
+        panel_widget = QWidget()
+        panel_widget.setLayout(panel)
+        panel_widget.setFixedWidth(180)
+
+        body = QHBoxLayout()
+        body.addWidget(self.video, stretch=1)
+        body.addWidget(panel_widget)
+
         root = QVBoxLayout()
         root.addLayout(buttons)
-        root.addWidget(self.video, stretch=1)
+        root.addLayout(body)
         central = QWidget()
         central.setLayout(root)
         self.setCentralWidget(central)
@@ -37,6 +57,7 @@ class MainWindow(QMainWindow):
         self.stop_worker()
         self.worker = VideoWorker(source)
         self.worker.frame_ready.connect(self.show_frame)
+        self.worker.metrics_ready.connect(self.show_metrics)
         self.worker.failed.connect(self.show_error)
         self.worker.start()
 
@@ -53,6 +74,18 @@ class MainWindow(QMainWindow):
     def show_frame(self, image):
         pixmap = QPixmap.fromImage(image)
         self.video.setPixmap(pixmap.scaled(self.video.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+    def show_metrics(self, m):
+        self.fps.setText(f"FPS: {m['fps']:.0f}")
+        self.light.setText("Baixa luz" if m["low_light"] else "")
+        if not m["face"]:
+            self.state.setText("Rosto não detectado")
+            self.ear.setText("EAR: -")
+            self.mar.setText("MAR: -")
+            return
+        self.ear.setText(f"EAR: {m['ear']:.3f}")
+        self.mar.setText(f"MAR: {m['mar']:.3f}")
+        self.state.setText("Estado: ATENÇÃO" if m["ear"] < EAR_PREVIEW_THRESHOLD else "Estado: OK")
 
     def show_error(self, message):
         QMessageBox.warning(self, "Erro", message)
