@@ -49,7 +49,7 @@ src/
   landmarks.py       ✅ MediaPipe Face Landmarker
   metrics.py         ✅ EAR, MAR, EMA, PERCLOS, pose da cabeça
   calibration.py     ✅ limiar de EAR por pessoa
-  fatigue.py         ⬜ estados e regras de alerta
+  fatigue.py         ✅ estados e regras de alerta
   alert.py           ⬜ alerta sonoro
   gui/               ⬜ janela PySide6
 tests/               ⬜ testes de metrics e fatigue
@@ -108,7 +108,7 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | 2 | Setup do repositório | Guilherme | Nenhuma | Branch `develop`, professor convidado, README corrigido e contrato entre módulos documentado | ✅ Concluída |
 | 3 | PERCLOS e pose da cabeça | Murilo | 1 | `metrics.py` com `perclos` (janela deslizante) e `head_pitch` (via `cv2.solvePnP` com 6 pontos do rosto) | ✅ Concluída |
 | 4 | Calibração por pessoa | Murilo | 1 | `calibration.py`: 3 s de olhos abertos → limiar = 70 % do EAR médio | ✅ Concluída |
-| 5 | Lógica de decisão | Giuliano | 2 (contrato) | `fatigue.py` com `FatigueMonitor` e as regras acima, usando relógio injetável para testar | ⬜ |
+| 5 | Lógica de decisão | Giuliano | 2 (contrato) | `fatigue.py` com `FatigueMonitor` e as regras acima, usando relógio injetável para testar | ✅ Concluída |
 | 6 | Testes unitários | Giuliano | 3, 5 | `tests/` cobrindo EAR/MAR/PERCLOS com pontos sintéticos e as regras de `fatigue.py` | ⬜ |
 | 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | 🟡 Em andamento: janela, thread, painel e botões funcionando, faltam os commits finais |
 | 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ⬜ |
