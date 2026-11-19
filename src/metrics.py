@@ -68,10 +68,15 @@ def _dist(a, b):
 
 
 def eye_aspect_ratio(pts, idx):
+    """EAR do olho, ou None se os pontos estão degenerados (largura ~0).
+
+    None, e não 0.0: um EAR 0.0 seria lido como "olho fechado" e geraria
+    falso alarme; None significa "sem medida neste quadro".
+    """
     p1, p2, p3, p4, p5, p6 = (pts[i] for i in idx)
     width = _dist(p1, p4)
     if width < 1e-6:
-        return 0.0
+        return None
     return (_dist(p2, p6) + _dist(p3, p5)) / (2.0 * width)
 
 
@@ -156,15 +161,19 @@ def rotation_to_angles(R):
 def head_pose(pts, image_size):
     """
     Estima (pitch, yaw, roll) em graus a partir dos landmarks em pixels.
-    Retorna None se o solvePnP falhar.
+    Retorna None se o solvePnP falhar (inclusive se ele LANÇAR cv2.error com
+    pontos degenerados, ex.: landmarks colapsados ou rosto de perfil extremo).
 
     Atenção: o modelo 3D é genérico, então mesmo olhando "reto" o pitch de uma
     pessoa pode não ser exatamente 0 (depende do rosto e da altura da câmera).
     Por isso a calibração guarda o pitch de referência de cada pessoa.
     """
     image_points = pts[POSE_LANDMARKS].astype(np.float64)
-    ok, rvec, _tvec = cv2.solvePnP(FACE_MODEL_3D, image_points,
-                                   camera_matrix(image_size), None, flags=_PNP_FLAG)
+    try:
+        ok, rvec, _tvec = cv2.solvePnP(FACE_MODEL_3D, image_points,
+                                       camera_matrix(image_size), None, flags=_PNP_FLAG)
+    except cv2.error:
+        return None
     if not ok:
         return None
     R, _ = cv2.Rodrigues(rvec)  # vetor de rotação (3) -> matriz de rotação (3x3)
@@ -184,13 +193,19 @@ def compute_metrics(pts, image_size=None):
     Ex.: compute_metrics(pts, image_size=(frame.shape[1], frame.shape[0]))
 
     O PERCLOS NÃO está aqui porque depende do histórico: use PerclosMeter.
+
+    Se um olho tiver pontos degenerados, o seu EAR vem None e "ear" usa só o
+    outro olho; se os dois falharem, "ear" vem None (FatigueMonitor e
+    EarCalibrator tratam isso como quadro sem rosto).
     """
     ear_r = eye_aspect_ratio(pts, RIGHT_EYE)
     ear_l = eye_aspect_ratio(pts, LEFT_EYE)
+    valid = [e for e in (ear_r, ear_l) if e is not None]
     metrics = {
         "ear_right": ear_r,
         "ear_left": ear_l,
-        "ear": (ear_r + ear_l) / 2.0,  # a média reduz o erro de um olho só
+        # a média reduz o erro de um olho só
+        "ear": sum(valid) / len(valid) if valid else None,
         "mar": mouth_aspect_ratio(pts),
         "head_pitch": None,
         "head_yaw": None,

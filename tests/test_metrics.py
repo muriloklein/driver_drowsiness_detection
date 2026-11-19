@@ -69,8 +69,23 @@ def test_ear_is_scale_invariant():
     assert eye_aspect_ratio(small, LEFT_EYE) == pytest.approx(eye_aspect_ratio(big, LEFT_EYE))
 
 
-def test_ear_zero_width_returns_zero():
-    assert eye_aspect_ratio(empty_pts(), RIGHT_EYE) == 0.0
+def test_ear_zero_width_returns_none():
+    # Largura ~0 = pontos degenerados: sem medida, e não "olho fechado".
+    assert eye_aspect_ratio(empty_pts(), RIGHT_EYE) is None
+
+
+def test_compute_metrics_one_degenerate_eye_uses_the_other():
+    pts = empty_pts()
+    set_eye(pts, LEFT_EYE, 1.0, x0=50.0)  # olho direito fica todo em (0, 0)
+    m = compute_metrics(pts)
+    assert m["ear_right"] is None
+    assert m["ear_left"] == pytest.approx(0.2)
+    assert m["ear"] == pytest.approx(0.2)
+
+
+def test_compute_metrics_both_eyes_degenerate_gives_none_ear():
+    m = compute_metrics(empty_pts())
+    assert m["ear"] is None and m["ear_right"] is None and m["ear_left"] is None
 
 
 def test_mar_value_and_closed_mouth():
@@ -134,6 +149,21 @@ def test_head_pose_recovers_yaw(angle):
 def test_head_pose_recovers_roll(angle):
     _, _, roll = head_pose(project_face(roll=angle), IMAGE_SIZE)
     assert roll == pytest.approx(angle, abs=1.5)
+
+
+def _solvepnp_raises(*args, **kwargs):
+    raise cv2.error("pontos degenerados (simulado)")
+
+
+def test_head_pose_returns_none_when_solvepnp_raises(monkeypatch):
+    monkeypatch.setattr(cv2, "solvePnP", _solvepnp_raises)
+    assert head_pose(project_face(), IMAGE_SIZE) is None
+
+
+def test_compute_metrics_survives_solvepnp_error(monkeypatch):
+    monkeypatch.setattr(cv2, "solvePnP", _solvepnp_raises)
+    m = compute_metrics(project_face(), IMAGE_SIZE)
+    assert m["head_pitch"] is None and m["head_yaw"] is None and m["head_roll"] is None
 
 
 # -------------------------------------------------------------------- PERCLOS

@@ -81,7 +81,8 @@ class EarCalibrator:
         """De 0 a 1, para desenhar uma barra de progresso."""
         if not self.active or self._t0 is None:
             return 1.0 if self.done else 0.0
-        return min((self._t - self._t0) / self.duration, 1.0)
+        # max(0.0): se o relógio voltar (ex.: troca de fonte), não fica negativo
+        return min(max((self._t - self._t0) / self.duration, 0.0), 1.0)
 
     def update(self, metrics, t):
         """
