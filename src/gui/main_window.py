@@ -3,7 +3,10 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
                                QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
+from src.alert import AlertSound
 from src.calibration import DEFAULT_EAR_THRESHOLD
+from src.fatigue import FatigueLevel
+from src.gui.alert_banner import AlertBanner
 from src.gui.worker import VideoWorker
 
 MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.bmp)"
@@ -54,7 +57,11 @@ class MainWindow(QMainWindow):
         body.addWidget(self.video, stretch=1)
         body.addWidget(panel_widget)
 
+        self.alert_banner = AlertBanner()
+        self.alert_sound = AlertSound()
+
         root = QVBoxLayout()
+        root.addWidget(self.alert_banner)
         root.addLayout(buttons)
         root.addLayout(body)
         central = QWidget()
@@ -97,6 +104,8 @@ class MainWindow(QMainWindow):
         self.mar.setText("MAR: -")
         self.fps.setText("FPS: -")
         self.light.setText("")
+        self.alert_banner.set_state(FatigueLevel.OK)
+        self.alert_sound.stop()
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Abrir vídeo ou imagem", "", MEDIA_FILTER)
@@ -128,6 +137,11 @@ class MainWindow(QMainWindow):
         self.mar.setText(f"MAR: {m['mar']:.3f}")
         self.state.setText("Estado: ATENÇÃO" if m["ear"] < DEFAULT_EAR_THRESHOLD else "Estado: OK")
 
+    def update_alert(self, state):
+        """Recebe um FatigueState (tarefa 10 liga o FatigueMonitor aqui)."""
+        self.alert_banner.set_state(state.level, state.reasons)
+        self.alert_sound.update(state.level)
+
     def show_error(self, message):
         self.set_webcam_button(False)
         self.clear_display()
@@ -135,4 +149,5 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.stop_worker()
+        self.alert_sound.close()
         super().closeEvent(event)

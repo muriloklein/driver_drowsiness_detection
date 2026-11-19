@@ -50,7 +50,7 @@ src/
   metrics.py         ✅ EAR, MAR, EMA, PERCLOS, pose da cabeça
   calibration.py     ✅ limiar de EAR por pessoa
   fatigue.py         ✅ estados e regras de alerta
-  alert.py           ⬜ alerta sonoro
+  alert.py           ✅ alerta sonoro
   gui/               ⬜ janela PySide6
 tests/               ✅ testes de metrics e fatigue
 ```
@@ -112,7 +112,7 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | 6 | Testes unitários | Giuliano | 3, 5 | `tests/` cobrindo EAR/MAR/PERCLOS com pontos sintéticos e as regras de `fatigue.py` | ✅ Concluída |
 | 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | 🟡 Em andamento: janela, thread, painel e botões funcionando, faltam os commits finais |
 | 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ⬜ |
-| 9 | Alertas | Giuliano | 5 | `alert.py` (som, via `winsound`/`QSoundEffect`) e faixa vermelha na GUI | ⬜ |
+| 9 | Alertas | Giuliano | 5 | `alert.py` (som, via `winsound`/`QSoundEffect`) e faixa vermelha na GUI | ✅ Concluída |
 | 10 | Integração e teste com arquivos | Giuliano + Guilherme | 7, 9 | Fluxo completo, testado com vídeos e fotos diferentes, incluindo cena escura | ⬜ |
 | 11 | Ajuste de limiares com dados reais | Os três | 10 | Cada um grava 1 min de teste e os limiares são ajustados | ⬜ |
 | 12 | Vídeo demonstrativo | Os três | 11 | Vídeo de 30 a 60 s, link no README | ⬜ |
