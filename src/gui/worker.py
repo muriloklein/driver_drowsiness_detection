@@ -49,10 +49,13 @@ class VideoWorker(QThread):
             pts = detector.detect(proc)
             vis = proc.copy()
 
-            metrics = {"face": pts is not None, "low_light": pre.last_low_light and self.use_preprocessing}
+            metrics = {"face": False, "low_light": pre.last_low_light and self.use_preprocessing}
             if pts is not None:
-                metrics.update(compute_metrics(pts))
-                metrics["ear"] = ear_ema.update(metrics["ear"])
+                m = compute_metrics(pts)
+                if m["ear"] is not None:
+                    m["ear"] = ear_ema.update(m["ear"])
+                    metrics.update(m)
+                    metrics["face"] = True
                 draw_contour(vis, pts, RIGHT_EYE_CONTOUR, GREEN)
                 draw_contour(vis, pts, LEFT_EYE_CONTOUR, GREEN)
                 draw_contour(vis, pts, MOUTH_CONTOUR, YELLOW)
