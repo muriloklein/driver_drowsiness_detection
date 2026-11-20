@@ -15,6 +15,8 @@ from src.gui.worker import VideoWorker
 
 MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.bmp)"
 GRAPH_SECONDS = 10
+STATE_COLORS = {FatigueLevel.OK: "#2e7d32", FatigueLevel.ATENCAO: "#ef6c00",
+                FatigueLevel.ALERTA: "#d32f2f"}
 
 
 class MainWindow(QMainWindow):
@@ -53,6 +55,8 @@ class MainWindow(QMainWindow):
         self.state.setStyleSheet("font-size: 18px; font-weight: bold;")
         self.ear = QLabel("EAR: -")
         self.mar = QLabel("MAR: -")
+        self.perclos = QLabel("PERCLOS: -")
+        self.yawns = QLabel("Bocejos: -")
         self.fps = QLabel("FPS: -")
         self.light = QLabel("")
         self.threshold_label = QLabel(f"Limiar EAR: {self.ear_threshold:.2f}")
@@ -61,7 +65,7 @@ class MainWindow(QMainWindow):
         self.calibration_bar.hide()
 
         panel = QVBoxLayout()
-        for label in (self.state, self.ear, self.mar, self.fps, self.light, self.threshold_label):
+        for label in (self.state, self.ear, self.mar, self.perclos, self.yawns, self.fps, self.light, self.threshold_label):
             panel.addWidget(label)
         panel.addWidget(self.calibration_bar)
         panel.addStretch()
@@ -101,10 +105,20 @@ class MainWindow(QMainWindow):
 
     def start(self, source):
         self.stop_worker()
+        self.reset_alert()
+        self.history.clear()
+        self.ear_curve.setData([], [])
+        # Nova fonte = novo FatigueMonitor (no worker) com limiar padrão.
+        self.calibration = None
+        self.ear_threshold = DEFAULT_EAR_THRESHOLD
+        self.threshold_line.setValue(self.ear_threshold)
+        self.threshold_label.setText(f"Limiar EAR: {self.ear_threshold:.2f}")
         self.worker = VideoWorker(source)
         self.worker.use_preprocessing = self.pre_check.isChecked()
         self.worker.frame_ready.connect(self.show_frame)
         self.worker.metrics_ready.connect(self.show_metrics)
+        self.worker.state_ready.connect(self.show_state)
+        self.worker.finished.connect(self.on_worker_finished)
         self.worker.failed.connect(self.show_error)
         self.worker.calibration_finished.connect(self.finish_calibration)
         self.worker.start()
@@ -112,8 +126,22 @@ class MainWindow(QMainWindow):
 
     def stop_worker(self):
         if self.worker is not None:
-            self.worker.stop()
-            self.worker = None
+            worker, self.worker = self.worker, None  # sinais pendentes viram "antigos"
+            worker.stop()
+        self.reset_alert()
+
+    def reset_alert(self):
+        self.alert_banner.set_state(FatigueLevel.OK)
+        self.alert_sound.stop()
+
+    def on_worker_finished(self):
+        if self.sender() is not self.worker:
+            return
+        self.reset_alert()
+        self.calibrate_btn.setEnabled(False)
+        self.calibration_bar.hide()
+        if self.webcam_btn.isChecked():
+            self.set_webcam_button(False)
 
     def toggle_webcam(self, on):
         self.webcam_btn.setText("Desligar webcam" if on else "Ligar webcam")
@@ -136,13 +164,15 @@ class MainWindow(QMainWindow):
         self.ear.setText("EAR: -")
         self.mar.setText("MAR: -")
         self.fps.setText("FPS: -")
+        self.perclos.setText("PERCLOS: -")
+        self.yawns.setText("Bocejos: -")
+        self.state.setStyleSheet("font-size: 18px; font-weight: bold;")
         self.light.setText("")
         self.calibrate_btn.setEnabled(False)
         self.calibration_bar.hide()
         self.history.clear()
         self.ear_curve.setData([], [])
-        self.alert_banner.set_state(FatigueLevel.OK)
-        self.alert_sound.stop()
+        self.reset_alert()
 
     def calibrate(self):
         if self.worker is not None:
@@ -152,7 +182,7 @@ class MainWindow(QMainWindow):
             self.worker.request_calibration()
 
     def finish_calibration(self, result, error):
-        if self.worker is None:
+        if self.sender() is not self.worker:
             return
         self.calibrate_btn.setEnabled(True)
         self.calibration_bar.hide()
@@ -175,13 +205,13 @@ class MainWindow(QMainWindow):
             self.worker.use_preprocessing = checked
 
     def show_frame(self, image):
-        if self.worker is None:
+        if self.sender() is not self.worker:
             return
         pixmap = QPixmap.fromImage(image)
         self.video.setPixmap(pixmap.scaled(self.video.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def show_metrics(self, m):
-        if self.worker is None:
+        if self.sender() is not self.worker:
             return
         self.fps.setText(f"FPS: {m['fps']:.0f}")
         self.light.setText("Baixa luz" if m["low_light"] else "")
@@ -189,7 +219,6 @@ class MainWindow(QMainWindow):
         if progress is not None:
             self.calibration_bar.setValue(int(progress * 100))
         if not m["face"]:
-            self.state.setText("Rosto não detectado")
             self.ear.setText("EAR: -")
             self.mar.setText("MAR: -")
             return
@@ -200,14 +229,30 @@ class MainWindow(QMainWindow):
         while now - self.history[0][0] > GRAPH_SECONDS:
             self.history.popleft()
         self.ear_curve.setData([t - now for t, _ in self.history], [e for _, e in self.history])
-        self.state.setText("Estado: ATENÇÃO" if m["ear"] < self.ear_threshold else "Estado: OK")
+
+    def show_state(self, state):
+        """Único ponto que lê o FatigueState vindo do worker."""
+        if self.sender() is not self.worker:
+            return
+        if not state.face_present and state.level == FatigueLevel.OK:
+            self.state.setText("Rosto não detectado")
+        else:
+            self.state.setText(f"Estado: {state.level.name}")
+        color = STATE_COLORS[state.level]
+        self.state.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {color};")
+        self.perclos.setText(f"PERCLOS: {state.perclos * 100:.0f} %" if state.perclos_ready
+                             else "PERCLOS: calculando...")
+        self.yawns.setText(f"Bocejos: {state.yawn_count}")
+        self.update_alert(state)
 
     def update_alert(self, state):
-        """Recebe um FatigueState (tarefa 10 liga o FatigueMonitor aqui)."""
+        """Recebe um FatigueState: faixa vermelha + som."""
         self.alert_banner.set_state(state.level, state.reasons)
         self.alert_sound.update(state.level)
 
     def show_error(self, message):
+        if self.sender() is not self.worker:
+            return
         self.set_webcam_button(False)
         self.clear_display()
         QMessageBox.warning(self, "Erro", message)
