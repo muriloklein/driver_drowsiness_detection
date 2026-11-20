@@ -3,6 +3,7 @@ import time
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 
+from src.calibration import EarCalibrator
 from src.capture import VideoSource
 from src.demo_etapa1 import GREEN, YELLOW, draw_contour, draw_ear_points
 from src.landmarks import FaceLandmarkDetector
@@ -15,12 +16,17 @@ class VideoWorker(QThread):
     frame_ready = Signal(QImage)
     metrics_ready = Signal(object)
     failed = Signal(str)
+    calibration_finished = Signal(object, object)
 
     def __init__(self, source):
         super().__init__()
         self.source = source
         self.use_preprocessing = True
         self._running = True
+        self._calibrate_requested = False
+
+    def request_calibration(self):
+        self._calibrate_requested = True
 
     def stop(self):
         self._running = False
@@ -36,14 +42,19 @@ class VideoWorker(QThread):
 
         pre = Preprocessor()
         ear_ema = EMA(alpha=0.5)
+        calibrator = EarCalibrator()
         frame_time = 0.0 if src.is_camera else 1.0 / src.fps
         fps = 0.0
+        frame_index = 0
 
         while self._running:
             start = time.time()
             ok, frame = src.read()
             if not ok:
                 break
+            h, w = frame.shape[:2]
+            t = time.monotonic() if src.is_camera else frame_index / src.fps
+            frame_index += 1
 
             proc = pre.process(frame) if self.use_preprocessing else frame
             pts = detector.detect(proc)
@@ -51,7 +62,7 @@ class VideoWorker(QThread):
 
             metrics = {"face": False, "low_light": pre.last_low_light and self.use_preprocessing}
             if pts is not None:
-                m = compute_metrics(pts)
+                m = compute_metrics(pts, image_size=(w, h))
                 if m["ear"] is not None:
                     m["ear"] = ear_ema.update(m["ear"])
                     metrics.update(m)
@@ -62,7 +73,16 @@ class VideoWorker(QThread):
                 draw_ear_points(vis, pts, RIGHT_EYE)
                 draw_ear_points(vis, pts, LEFT_EYE)
 
-            h, w = vis.shape[:2]
+            if self._calibrate_requested:
+                self._calibrate_requested = False
+                calibrator.start(t)
+            metrics["calibration_progress"] = None
+            if calibrator.active:
+                finished = calibrator.update(metrics if metrics["face"] else None, t)
+                metrics["calibration_progress"] = calibrator.progress
+                if finished:
+                    self.calibration_finished.emit(calibrator.result, calibrator.error)
+
             self.frame_ready.emit(QImage(vis.data, w, h, 3 * w, QImage.Format_BGR888).copy())
 
             elapsed = time.time() - start

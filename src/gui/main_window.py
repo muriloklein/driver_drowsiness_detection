@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
-                               QMessageBox, QPushButton, QVBoxLayout, QWidget)
+                               QMessageBox, QProgressBar, QPushButton, QVBoxLayout, QWidget)
 
 from src.alert import AlertSound
 from src.calibration import DEFAULT_EAR_THRESHOLD
@@ -17,6 +17,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Detector de Sono e Fadiga")
         self.worker = None
+        self.ear_threshold = DEFAULT_EAR_THRESHOLD
+        self.calibration = None
 
         self.video = QLabel("Sem vídeo")
         self.video.setAlignment(Qt.AlignCenter)
@@ -28,6 +30,9 @@ class MainWindow(QMainWindow):
         self.webcam_btn.toggled.connect(self.toggle_webcam)
         file_btn = QPushButton("Abrir arquivo")
         file_btn.clicked.connect(self.open_file)
+        self.calibrate_btn = QPushButton("Calibrar")
+        self.calibrate_btn.setEnabled(False)
+        self.calibrate_btn.clicked.connect(self.calibrate)
         self.pre_check = QCheckBox("Pré-processamento")
         self.pre_check.setChecked(True)
         self.pre_check.toggled.connect(self.toggle_preprocessing)
@@ -35,6 +40,7 @@ class MainWindow(QMainWindow):
         buttons = QHBoxLayout()
         buttons.addWidget(self.webcam_btn)
         buttons.addWidget(file_btn)
+        buttons.addWidget(self.calibrate_btn)
         buttons.addWidget(self.pre_check)
         buttons.addStretch()
 
@@ -44,10 +50,15 @@ class MainWindow(QMainWindow):
         self.mar = QLabel("MAR: -")
         self.fps = QLabel("FPS: -")
         self.light = QLabel("")
+        self.threshold_label = QLabel(f"Limiar EAR: {self.ear_threshold:.2f}")
+        self.calibration_bar = QProgressBar()
+        self.calibration_bar.setRange(0, 100)
+        self.calibration_bar.hide()
 
         panel = QVBoxLayout()
-        for label in (self.state, self.ear, self.mar, self.fps, self.light):
+        for label in (self.state, self.ear, self.mar, self.fps, self.light, self.threshold_label):
             panel.addWidget(label)
+        panel.addWidget(self.calibration_bar)
         panel.addStretch()
         panel_widget = QWidget()
         panel_widget.setLayout(panel)
@@ -75,7 +86,9 @@ class MainWindow(QMainWindow):
         self.worker.frame_ready.connect(self.show_frame)
         self.worker.metrics_ready.connect(self.show_metrics)
         self.worker.failed.connect(self.show_error)
+        self.worker.calibration_finished.connect(self.finish_calibration)
         self.worker.start()
+        self.calibrate_btn.setEnabled(True)
 
     def stop_worker(self):
         if self.worker is not None:
@@ -104,8 +117,29 @@ class MainWindow(QMainWindow):
         self.mar.setText("MAR: -")
         self.fps.setText("FPS: -")
         self.light.setText("")
+        self.calibrate_btn.setEnabled(False)
+        self.calibration_bar.hide()
         self.alert_banner.set_state(FatigueLevel.OK)
         self.alert_sound.stop()
+
+    def calibrate(self):
+        if self.worker is not None:
+            self.calibrate_btn.setEnabled(False)
+            self.calibration_bar.setValue(0)
+            self.calibration_bar.show()
+            self.worker.request_calibration()
+
+    def finish_calibration(self, result, error):
+        if self.worker is None:
+            return
+        self.calibrate_btn.setEnabled(True)
+        self.calibration_bar.hide()
+        if error:
+            QMessageBox.warning(self, "Calibração", error)
+            return
+        self.calibration = result
+        self.ear_threshold = result.ear_threshold
+        self.threshold_label.setText(f"Limiar EAR: {self.ear_threshold:.2f} (calibrado)")
 
     def open_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Abrir vídeo ou imagem", "", MEDIA_FILTER)
@@ -128,6 +162,9 @@ class MainWindow(QMainWindow):
             return
         self.fps.setText(f"FPS: {m['fps']:.0f}")
         self.light.setText("Baixa luz" if m["low_light"] else "")
+        progress = m["calibration_progress"]
+        if progress is not None:
+            self.calibration_bar.setValue(int(progress * 100))
         if not m["face"]:
             self.state.setText("Rosto não detectado")
             self.ear.setText("EAR: -")
@@ -135,7 +172,7 @@ class MainWindow(QMainWindow):
             return
         self.ear.setText(f"EAR: {m['ear']:.3f}")
         self.mar.setText(f"MAR: {m['mar']:.3f}")
-        self.state.setText("Estado: ATENÇÃO" if m["ear"] < DEFAULT_EAR_THRESHOLD else "Estado: OK")
+        self.state.setText("Estado: ATENÇÃO" if m["ear"] < self.ear_threshold else "Estado: OK")
 
     def update_alert(self, state):
         """Recebe um FatigueState (tarefa 10 liga o FatigueMonitor aqui)."""
