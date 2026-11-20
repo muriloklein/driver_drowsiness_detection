@@ -1,3 +1,7 @@
+import time
+from collections import deque
+
+import pyqtgraph as pg
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
@@ -10,6 +14,7 @@ from src.gui.alert_banner import AlertBanner
 from src.gui.worker import VideoWorker
 
 MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.bmp)"
+GRAPH_SECONDS = 10
 
 
 class MainWindow(QMainWindow):
@@ -68,6 +73,20 @@ class MainWindow(QMainWindow):
         body.addWidget(self.video, stretch=1)
         body.addWidget(panel_widget)
 
+        self.history = deque()
+        self.plot = pg.PlotWidget()
+        self.plot.setFixedHeight(140)
+        self.plot.setYRange(0, 0.5)
+        self.plot.setXRange(-GRAPH_SECONDS, 0)
+        self.plot.setMouseEnabled(False, False)
+        self.plot.hideButtons()
+        self.plot.setLabel("left", "EAR")
+        self.plot.setLabel("bottom", "segundos")
+        self.ear_curve = self.plot.plot(pen=pg.mkPen("#4caf50", width=2))
+        self.threshold_line = pg.InfiniteLine(pos=self.ear_threshold, angle=0,
+                                              pen=pg.mkPen("#d32f2f", style=Qt.DashLine))
+        self.plot.addItem(self.threshold_line)
+
         self.alert_banner = AlertBanner()
         self.alert_sound = AlertSound()
 
@@ -75,6 +94,7 @@ class MainWindow(QMainWindow):
         root.addWidget(self.alert_banner)
         root.addLayout(buttons)
         root.addLayout(body)
+        root.addWidget(self.plot)
         central = QWidget()
         central.setLayout(root)
         self.setCentralWidget(central)
@@ -119,6 +139,8 @@ class MainWindow(QMainWindow):
         self.light.setText("")
         self.calibrate_btn.setEnabled(False)
         self.calibration_bar.hide()
+        self.history.clear()
+        self.ear_curve.setData([], [])
         self.alert_banner.set_state(FatigueLevel.OK)
         self.alert_sound.stop()
 
@@ -139,6 +161,7 @@ class MainWindow(QMainWindow):
             return
         self.calibration = result
         self.ear_threshold = result.ear_threshold
+        self.threshold_line.setValue(self.ear_threshold)
         self.threshold_label.setText(f"Limiar EAR: {self.ear_threshold:.2f} (calibrado)")
 
     def open_file(self):
@@ -172,6 +195,11 @@ class MainWindow(QMainWindow):
             return
         self.ear.setText(f"EAR: {m['ear']:.3f}")
         self.mar.setText(f"MAR: {m['mar']:.3f}")
+        now = time.monotonic()
+        self.history.append((now, m["ear"]))
+        while now - self.history[0][0] > GRAPH_SECONDS:
+            self.history.popleft()
+        self.ear_curve.setData([t - now for t, _ in self.history], [e for _, e in self.history])
         self.state.setText("Estado: ATENÇÃO" if m["ear"] < self.ear_threshold else "Estado: OK")
 
     def update_alert(self, state):
