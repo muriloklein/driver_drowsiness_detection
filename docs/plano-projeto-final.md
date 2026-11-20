@@ -110,7 +110,7 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | 4 | Calibração por pessoa | Murilo | 1 | `calibration.py`: 3 s de olhos abertos → limiar = 70 % do EAR médio | ✅ Concluída |
 | 5 | Lógica de decisão | Giuliano | 2 (contrato) | `fatigue.py` com `FatigueMonitor` e as regras acima, usando relógio injetável para testar | ✅ Concluída |
 | 6 | Testes unitários | Giuliano | 3, 5 | `tests/` cobrindo EAR/MAR/PERCLOS com pontos sintéticos e as regras de `fatigue.py` | ✅ Concluída |
-| 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | 🟡 Em andamento: janela, thread, painel e botões funcionando, faltam os commits finais |
+| 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | ✅ Concluída |
 | 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ⬜ |
 | 9 | Alertas | Giuliano | 5 | `alert.py` (som, via `winsound`/`QSoundEffect`) e faixa vermelha na GUI | ✅ Concluída |
 | 10 | Integração e teste com arquivos | Giuliano + Guilherme | 7, 9 | Fluxo completo, testado com vídeos e fotos diferentes, incluindo cena escura | ⬜ |
