@@ -10,7 +10,7 @@ Sistema que monitora o rosto do motorista pela câmera e emite alertas quando de
 
 - Murilo K. Klein
 - Guilherme S. Machado
-- Giuliano L. Chiochietta
+- Giuliano L. Chiochetta
 
 ## Como funciona
 

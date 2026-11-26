@@ -6,8 +6,7 @@ Cada integrante do grupo deve rodar isso na própria máquina.
 
 O que ele faz:
   1. Mostra versões do Python, OpenCV, NumPy e MediaPipe
-  2. Verifica se a OpenCV tem suporte a CUDA (GPU NVIDIA)
-  3. Abre a webcam e mostra o vídeo com o FPS na tela (tecla 'q' para sair)
+  2. Abre a webcam e mostra o vídeo com o FPS na tela (tecla 'q' para sair)
 """
 
 import sys
@@ -39,31 +38,12 @@ def check_libs():
     except ImportError:
         print("MediaPipe .... NÃO INSTALADO")
 
-    # O módulo cv2.face só existe no opencv-contrib-python
-    print(f"Contrib ...... {'OK' if hasattr(cv2, 'face') else 'ausente (instale opencv-contrib-python)'}")
     return cv2
-
-
-def check_cuda(cv2):
-    print("\n" + "=" * 50)
-    print("2) CUDA (GPU NVIDIA)")
-    print("=" * 50)
-    try:
-        n = cv2.cuda.getCudaEnabledDeviceCount()
-    except Exception:
-        n = 0
-
-    if n > 0:
-        print(f"OpenCV com CUDA: SIM ({n} GPU(s) disponível(is))")
-    else:
-        print("OpenCV com CUDA: NÃO")
-        print("  -> Normal! A OpenCV do pip vem SEM CUDA. Vamos desenvolver em CPU")
-        print("     e compilar a OpenCV com CUDA só na máquina com NVIDIA (Etapa 4).")
 
 
 def test_webcam(cv2, index=0):
     print("\n" + "=" * 50)
-    print("3) Webcam")
+    print("2) Webcam")
     print("=" * 50)
 
     cap = cv2.VideoCapture(index, cv2.CAP_DSHOW if sys.platform == "win32" else cv2.CAP_ANY)          # 0 = primeira câmera do sistema
@@ -106,6 +86,5 @@ def test_webcam(cv2, index=0):
 
 if __name__ == "__main__":
     cv2 = check_libs()
-    check_cuda(cv2)
     cam = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     test_webcam(cv2, cam)
