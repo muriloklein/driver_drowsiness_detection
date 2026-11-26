@@ -51,7 +51,7 @@ src/
   calibration.py     ✅ limiar de EAR por pessoa
   fatigue.py         ✅ estados e regras de alerta
   alert.py           ✅ alerta sonoro
-  gui/               ⬜ janela PySide6
+  gui/               ✅ janela PySide6
 tests/               ✅ testes de metrics e fatigue
 ```
 
@@ -111,7 +111,7 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | 5 | Lógica de decisão | Giuliano | 2 (contrato) | `fatigue.py` com `FatigueMonitor` e as regras acima, usando relógio injetável para testar | ✅ Concluída |
 | 6 | Testes unitários | Giuliano | 3, 5 | `tests/` cobrindo EAR/MAR/PERCLOS com pontos sintéticos e as regras de `fatigue.py` | ✅ Concluída |
 | 7 | GUI: janela e vídeo | Guilherme | 2 | `gui/main_window.py`: `QThread` de captura, vídeo com landmarks, painel de indicadores, botões de fonte (webcam/arquivo) | ✅ Concluída |
-| 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ⬜ |
+| 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ✅ Concluída |
 | 9 | Alertas | Giuliano | 5 | `alert.py` (som, via `winsound`/`QSoundEffect`) e faixa vermelha na GUI | ✅ Concluída |
 | 10 | Integração e teste com arquivos | Giuliano + Guilherme | 7, 9 | Fluxo completo, testado com vídeos e fotos diferentes, incluindo cena escura | ✅ Concluída |
 | 11 | Ajuste de limiares com dados reais | Os três | 10 | Cada um grava 1 min de teste e os limiares são ajustados | ⬜ |
@@ -150,13 +150,13 @@ A apresentação é 30/11. O app precisa estar completo em 23/11.
 
 - [x] Professor (`rafaelrieder`) adicionado como colaborador
 - [x] Branch `develop` criada e a `main` recebe só merges da `develop`
-- [ ] Os 3 integrantes com commits de código (não só README)
+- [x] Os 3 integrantes com commits de código (não só README)
 - [ ] Ambiente roda do zero com `pip install -r requirements.txt` + `download_models.py`
-- [ ] Alerta dispara com olhos fechados por mais de 2 s
-- [ ] Calibração muda o limiar e o gráfico reflete isso
-- [ ] Abre webcam, vídeo e imagem pela GUI
+- [x] Alerta dispara com olhos fechados por mais de 2 s
+- [x] Calibração muda o limiar e o gráfico reflete isso
+- [x] Abre webcam, vídeo e imagem pela GUI
 - [ ] Pré-processamento visível funcionando em cena escura (antes/depois)
-- [ ] Testes passando (`pytest`)
+- [x] Testes passando (`pytest`)
 - [ ] Vídeo de 30 a 60 s gravado e linkado no README
 - [ ] README com integrantes, descrição, instruções e link do vídeo
 - [ ] Roteiro da apresentação (10 min): problema → pipeline → filtros → métricas → demo ao vivo → arquivo do professor → o que é nosso vs. modelo pronto
