@@ -46,7 +46,11 @@ def test_webcam(cv2, index=0):
     print("2) Webcam")
     print("=" * 50)
 
-    cap = cv2.VideoCapture(index, cv2.CAP_DSHOW if sys.platform == "win32" else cv2.CAP_ANY)          # 0 = primeira câmera do sistema
+    cap = cv2.VideoCapture(index)          # 0 = primeira câmera do sistema
+    if not cap.isOpened():
+        # algumas câmeras só abrem pelo DirectShow; outras falham justamente nele
+        cap.release()
+        cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
     if not cap.isOpened():
         print(f"Não consegui abrir a câmera {index}. Tente outro índice: 1, 2...")
         return

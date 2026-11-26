@@ -73,6 +73,7 @@ A janela abre já com a webcam ligada.
 | Controle | O que faz |
 | --- | --- |
 | **Ligar webcam / Desligar webcam** | Inicia ou encerra a captura da webcam |
+| **Índice da câmera** (lista de `0` a `3`) | Escolhe qual câmera usar (`0` é a primeira do sistema). Com a webcam ligada, a troca vale na hora |
 | **Abrir arquivo** | Analisa um vídeo (`.mp4`, `.avi`, `.mov`, `.mkv`) ou uma imagem (`.jpg`, `.jpeg`, `.png`, `.bmp`) |
 | **Calibrar** | Mede por 3 s o seu EAR de olhos abertos e a posição da cabeça. Olhe para a câmera até a barra de progresso terminar |
 | **Pré-processamento** | Liga ou desliga os filtros, para comparar o antes e o depois em cena escura |
