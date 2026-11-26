@@ -17,6 +17,8 @@ MEDIA_FILTER = "Vídeos e imagens (*.mp4 *.avi *.mov *.mkv *.jpg *.jpeg *.png *.
 GRAPH_SECONDS = 10
 STATE_COLORS = {FatigueLevel.OK: "#2e7d32", FatigueLevel.ATENCAO: "#ef6c00",
                 FatigueLevel.ALERTA: "#d32f2f"}
+STATE_NAMES = {FatigueLevel.OK: "OK", FatigueLevel.ATENCAO: "ATENÇÃO",
+               FatigueLevel.ALERTA: "ALERTA"}
 
 
 class MainWindow(QMainWindow):
@@ -53,8 +55,12 @@ class MainWindow(QMainWindow):
 
         self.state = QLabel("Estado: -")
         self.state.setStyleSheet("font-size: 18px; font-weight: bold;")
+        self.reason = QLabel()
+        self.reason.setWordWrap(True)
+        self.reason.hide()
         self.ear = QLabel("EAR: -")
         self.mar = QLabel("MAR: -")
+        self.pitch = QLabel("Pitch: -")
         self.perclos = QLabel("PERCLOS: -")
         self.yawns = QLabel("Bocejos: -")
         self.fps = QLabel("FPS: -")
@@ -65,7 +71,8 @@ class MainWindow(QMainWindow):
         self.calibration_bar.hide()
 
         panel = QVBoxLayout()
-        for label in (self.state, self.ear, self.mar, self.perclos, self.yawns, self.fps, self.light, self.threshold_label):
+        for label in (self.state, self.reason, self.ear, self.mar, self.pitch, self.perclos,
+                      self.yawns, self.fps, self.light, self.threshold_label):
             panel.addWidget(label)
         panel.addWidget(self.calibration_bar)
         panel.addStretch()
@@ -108,6 +115,8 @@ class MainWindow(QMainWindow):
         self.reset_alert()
         self.history.clear()
         self.ear_curve.setData([], [])
+        self.reason.hide()
+        self.pitch.setText("Pitch: -")
         # Nova fonte = novo FatigueMonitor (no worker) com limiar padrão.
         self.calibration = None
         self.ear_threshold = DEFAULT_EAR_THRESHOLD
@@ -171,6 +180,9 @@ class MainWindow(QMainWindow):
         self.state.setText("Estado: -")
         self.ear.setText("EAR: -")
         self.mar.setText("MAR: -")
+        self.pitch.setText("Pitch: -")
+        self.reason.clear()
+        self.reason.hide()
         self.fps.setText("FPS: -")
         self.perclos.setText("PERCLOS: -")
         self.yawns.setText("Bocejos: -")
@@ -245,9 +257,15 @@ class MainWindow(QMainWindow):
         if not state.face_present and state.level == FatigueLevel.OK:
             self.state.setText("Rosto não detectado")
         else:
-            self.state.setText(f"Estado: {state.level.name}")
+            self.state.setText(f"Estado: {STATE_NAMES[state.level]}")
         color = STATE_COLORS[state.level]
         self.state.setStyleSheet(f"font-size: 18px; font-weight: bold; color: {color};")
+        self.reason.setText("\n".join(state.reasons))
+        self.reason.setStyleSheet(f"color: {color};")
+        self.reason.setVisible(state.level != FatigueLevel.OK)
+        # relativo à calibração; positivo = cabeça para baixo
+        self.pitch.setText("Pitch: -" if state.head_pitch is None
+                           else f"Pitch: {state.head_pitch:+.0f}°")
         self.perclos.setText(f"PERCLOS: {state.perclos * 100:.0f} %" if state.perclos_ready
                              else "PERCLOS: calculando...")
         self.yawns.setText(f"Bocejos: {state.yawn_count}")
