@@ -4,8 +4,9 @@ from collections import deque
 import pyqtgraph as pg
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QCheckBox, QFileDialog, QHBoxLayout, QLabel, QMainWindow,
-                               QMessageBox, QProgressBar, QPushButton, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLabel,
+                               QMainWindow, QMessageBox, QProgressBar, QPushButton,
+                               QVBoxLayout, QWidget)
 
 from src.alert import AlertSound
 from src.calibration import DEFAULT_EAR_THRESHOLD
@@ -37,6 +38,11 @@ class MainWindow(QMainWindow):
         self.webcam_btn = QPushButton("Ligar webcam")
         self.webcam_btn.setCheckable(True)
         self.webcam_btn.toggled.connect(self.toggle_webcam)
+        self.camera_combo = QComboBox()
+        for index in range(4):
+            self.camera_combo.addItem(str(index), index)
+        self.camera_combo.setToolTip("Índice da câmera")
+        self.camera_combo.currentIndexChanged.connect(self.change_camera)
         file_btn = QPushButton("Abrir arquivo")
         file_btn.clicked.connect(self.open_file)
         self.calibrate_btn = QPushButton("Calibrar")
@@ -48,6 +54,7 @@ class MainWindow(QMainWindow):
 
         buttons = QHBoxLayout()
         buttons.addWidget(self.webcam_btn)
+        buttons.addWidget(self.camera_combo)
         buttons.addWidget(file_btn)
         buttons.addWidget(self.calibrate_btn)
         buttons.addWidget(self.pre_check)
@@ -163,10 +170,14 @@ class MainWindow(QMainWindow):
     def toggle_webcam(self, on):
         self.webcam_btn.setText("Desligar webcam" if on else "Ligar webcam")
         if on:
-            self.start(0)
+            self.start(self.camera_combo.currentData())
         else:
             self.stop_worker()
             self.clear_display()
+
+    def change_camera(self):
+        if self.webcam_btn.isChecked():
+            self.start(self.camera_combo.currentData())
 
     def set_webcam_button(self, on):
         self.webcam_btn.blockSignals(True)

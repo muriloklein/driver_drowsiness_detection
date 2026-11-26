@@ -7,7 +7,6 @@ Uso:
     src = VideoSource("foto.jpg")        # imagem (repete o mesmo quadro)
 """
 
-import sys
 from pathlib import Path
 
 import cv2
@@ -35,8 +34,11 @@ class VideoSource:
             if self._image is None:
                 raise IOError(f"Não consegui ler a imagem: {source}")
         else:
-            api = cv2.CAP_DSHOW if self.is_camera and sys.platform == "win32" else cv2.CAP_ANY
-            self._cap = cv2.VideoCapture(source, api)
+            self._cap = cv2.VideoCapture(source)
+            if self.is_camera and not self._cap.isOpened():
+                # algumas câmeras só abrem pelo DirectShow; outras falham justamente nele
+                self._cap.release()
+                self._cap = cv2.VideoCapture(source, cv2.CAP_DSHOW)
             if not self._cap.isOpened():
                 raise IOError(f"Não consegui abrir a fonte de vídeo: {source}")
             if width:
