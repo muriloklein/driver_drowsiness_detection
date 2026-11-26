@@ -130,12 +130,20 @@ class MainWindow(QMainWindow):
             worker.stop()
         self.reset_alert()
 
+    def is_stale_signal(self):
+        """True para sinal atrasado: fonte desligada ou worker que já foi trocado.
+
+        Com a fonte desligada, sender() também pode ser None (worker destruído),
+        por isso comparar só o remetente não basta.
+        """
+        return self.worker is None or self.sender() is not self.worker
+
     def reset_alert(self):
         self.alert_banner.set_state(FatigueLevel.OK)
         self.alert_sound.stop()
 
     def on_worker_finished(self):
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         self.reset_alert()
         self.calibrate_btn.setEnabled(False)
@@ -182,7 +190,7 @@ class MainWindow(QMainWindow):
             self.worker.request_calibration()
 
     def finish_calibration(self, result, error):
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         self.calibrate_btn.setEnabled(True)
         self.calibration_bar.hide()
@@ -205,13 +213,13 @@ class MainWindow(QMainWindow):
             self.worker.use_preprocessing = checked
 
     def show_frame(self, image):
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         pixmap = QPixmap.fromImage(image)
         self.video.setPixmap(pixmap.scaled(self.video.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def show_metrics(self, m):
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         self.fps.setText(f"FPS: {m['fps']:.0f}")
         self.light.setText("Baixa luz" if m["low_light"] else "")
@@ -232,7 +240,7 @@ class MainWindow(QMainWindow):
 
     def show_state(self, state):
         """Único ponto que lê o FatigueState vindo do worker."""
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         if not state.face_present and state.level == FatigueLevel.OK:
             self.state.setText("Rosto não detectado")
@@ -251,7 +259,7 @@ class MainWindow(QMainWindow):
         self.alert_sound.update(state.level)
 
     def show_error(self, message):
-        if self.sender() is not self.worker:
+        if self.is_stale_signal():
             return
         self.set_webcam_button(False)
         self.clear_display()
