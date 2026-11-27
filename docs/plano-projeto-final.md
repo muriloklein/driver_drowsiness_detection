@@ -158,5 +158,5 @@ A apresentação é 30/11. O app precisa estar completo em 23/11.
 - [x] Pré-processamento visível funcionando em cena escura (antes/depois)
 - [x] Testes passando (`pytest`)
 - [x] Vídeo de 30 a 60 s gravado e linkado no README
-- [ ] README com integrantes, descrição, instruções e link do vídeo
+- [x] README com integrantes, descrição, instruções e link do vídeo
 - [ ] Roteiro da apresentação (10 min): problema → pipeline → filtros → métricas → demo ao vivo → arquivo do professor → o que é nosso vs. modelo pronto
