@@ -114,8 +114,8 @@ Faixa vermelha piscando e som quando o estado vira `ALERTA`.
 | 8 | GUI: gráfico e calibração | Guilherme | 4, 7 | Gráfico `pyqtgraph` do EAR com limiar e botão Calibrar | ✅ Concluída |
 | 9 | Alertas | Giuliano | 5 | `alert.py` (som, via `winsound`/`QSoundEffect`) e faixa vermelha na GUI | ✅ Concluída |
 | 10 | Integração e teste com arquivos | Giuliano + Guilherme | 7, 9 | Fluxo completo, testado com vídeos e fotos diferentes, incluindo cena escura | ✅ Concluída |
-| 11 | Ajuste de limiares com dados reais | Os três | 10 | Cada um grava 1 min de teste e os limiares são ajustados | ⬜ |
-| 12 | Vídeo demonstrativo | Os três | 11 | Vídeo de 30 a 60 s, link no README | ⬜ |
+| 11 | Ajuste de limiares com dados reais | Os três | 10 | Cada um grava 1 min de teste e os limiares são ajustados | ✅ Concluída |
+| 12 | Vídeo demonstrativo | Os três | 11 | Vídeo de 30 a 60 s, link no README | ✅ Concluída |
 | 13 | README final e ensaio | Os três | 12 | README completo, apresentação de 10 min ensaiada | ⬜ |
 | 14 | Extra: CNN de olhos + CUDA | Murilo | 11 | Só se sobrar tempo: notebook em `training/`, `.onnx` em `models/`, `eye_classifier.py` via `cv2.dnn` | ⬜ Opcional |
 
@@ -155,8 +155,8 @@ A apresentação é 30/11. O app precisa estar completo em 23/11.
 - [x] Alerta dispara com olhos fechados por mais de 2 s
 - [x] Calibração muda o limiar e o gráfico reflete isso
 - [x] Abre webcam, vídeo e imagem pela GUI
-- [ ] Pré-processamento visível funcionando em cena escura (antes/depois)
+- [x] Pré-processamento visível funcionando em cena escura (antes/depois)
 - [x] Testes passando (`pytest`)
-- [ ] Vídeo de 30 a 60 s gravado e linkado no README
+- [x] Vídeo de 30 a 60 s gravado e linkado no README
 - [ ] README com integrantes, descrição, instruções e link do vídeo
 - [ ] Roteiro da apresentação (10 min): problema → pipeline → filtros → métricas → demo ao vivo → arquivo do professor → o que é nosso vs. modelo pronto

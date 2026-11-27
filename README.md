@@ -4,7 +4,7 @@ Trabalho prático da disciplina **CCC309: Processamento de Imagens e Visão Comp
 
 Sistema que monitora o rosto do motorista pela câmera e emite alertas quando detecta sinais de sonolência: olhos fechados por tempo prolongado (EAR e PERCLOS), bocejos (MAR) e queda da cabeça.
 
-> 🎬 **Vídeo demonstrativo:** _link será adicionado aqui_
+> 🎬 **Vídeo demonstrativo:** https://youtu.be/cvDjYfFYEMA
 
 ## Integrantes
 
